@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}Government Job Deadline Guardian | Active Official Vacancies{% endblock %}
+
+{% block content %}
+
+<!-- Hero Banner & Stats -->
+<section class="hero-section" id="hero-banner">
+  <div class="hero-content">
+    <div class="hero-tagline">
+      <span>🛡️ Centralized Official Recruitment Portal</span>
+    </div>
+    <h2 class="hero-title">
+      Never Miss an Official Government Job Deadline Again.
+    </h2>
+    <p class="hero-desc">
+      Monitor live vacancies from UPSC, SSC, Railways, Banking, Defence, and State Public Service Commissions with verified official links, real-time closing countdowns, and automated eligibility checking.
+    </p>
+
+    <!-- Stat Counters -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-label">Active Vacancies</span>
+          <span class="stat-icon">👥</span>
+        </div>
+        <div class="stat-value">{{ "{:,}".format(total_vacancies) }}</div>
+        <div class="stat-meta">Across all Central & State departments</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-label">Closing in &lt; 48h</span>
+          <span class="stat-icon" style="color: #ef4444;">⏰</span>
+        </div>
+        <div class="stat-value" style="color: #f87171;">{{ critical_count }}</div>
+        <div class="stat-meta">Immediate action required</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-label">Corrigendum Updates</span>
+          <span class="stat-icon" style="color: #a78bfa;">🔄</span>
+        </div>
+        <div class="stat-value" style="color: #c4b5fd;">{{ extended_count }}</div>
+        <div class="stat-meta">Officially extended deadlines</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-label">Active Notifications</span>
+          <span class="stat-icon">📜</span>
+        </div>
+        <div class="stat-value">{{ total_jobs }}</div>
+        <div class="stat-meta">Verified authentic .gov.in portals</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Search and Multi-Filters Bar -->
+<section class="search-filter-card" id="search-filter-section">
+  <form method="GET" action="{{ url_for('index') }}" id="search-filter-form">
+    
+    <!-- Top Search Input -->
+    <div class="search-box-row">
+      <div class="search-input-wrap">
+        <span class="search-icon-inside">🔍</span>
+        <input 
+          type="text" 
+          name="q" 
+          id="search-input-field"
+          value="{{ current_query }}" 
+          placeholder="Search by Job Title, Department, Advt No (e.g., Civil Services, RRB, SBI, DRDO, 04/2026)..." 
+          class="search-input"
+        >
+      </div>
+      <button type="submit" class="btn-filter-action" id="btn-search-submit">
+        Search Vacancies
+      </button>
+      {% if current_query or current_category or current_state or current_qualification or current_urgency %}
+        <a href="{{ url_for('index') }}" class="btn-reset" id="btn-clear-filters">
+          ✕ Clear Filters
+        </a>
+      {% endif %}
+    </div>
+
+    <!-- Filter Selects -->
+    <div class="filter-selects-row">
+      
+      <div class="filter-group">
+        <label for="filter-category">Department / Sector</label>
+        <select name="category" id="filter-category" class="filter-select" onchange="this.form.submit()">
+          <option value="">All Sectors (Central & State)</option>
+          {% for cat in categories %}
+            <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>{{ cat }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="filter-qualification">Minimum Qualification</label>
+        <select name="qualification" id="filter-qualification" class="filter-select" onchange="this.form.submit()">
+          <option value="">All Qualifications</option>
+          {% for qual in qualifications %}
+            <option value="{{ qual }}" {% if current_qualification == qual %}selected{% endif %}>{{ qual }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="filter-state">State / Jurisdiction</label>
+        <select name="state" id="filter-state" class="filter-select" onchange="this.form.submit()">
+          <option value="">All India & States</option>
+          {% for st in states %}
+            <option value="{{ st }}" {% if current_state == st %}selected{% endif %}>{{ st }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="filter-sort">Sort Order</label>
+        <select name="sort" id="filter-sort" class="filter-select" onchange="this.form.submit()">
+          <option value="urgency" {% if current_sort == 'urgency' %}selected{% endif %}>Closing Soonest (Urgent)</option>
+          <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Newest Notifications First</option>
+          <option value="vacancies" {% if current_sort == 'vacancies' %}selected{% endif %}>Highest Vacancies</option>
+        </select>
+      </div>
+
+    </div>
+
+    <!-- Urgency Fast-Filter Chips -->
+    <div class="urgency-chips-row">
+      <span class="chip-label">Quick Deadline Filter:</span>
+      
+      <a href="{{ url_for('index', q=current_query, category=current_category, state=current_state, qualification=current_qualification, sort=current_sort) }}" 
+         class="urgency-chip {% if not current_urgency %}active{% endif %}">
+        All Active Postings
+      </a>
+
+      <a href="{{ url_for('index', urgency='24h', q=current_query, category=current_category, state=current_state, qualification=current_qualification, sort=current_sort) }}" 
+         class="urgency-chip {% if current_urgency == '24h' %}active-critical{% endif %}">
+        🔴 Closing in 24 Hours
+      </a>
+
+      <a href="{{ url_for('index', urgency='48h', q=current_query, category=current_category, state=current_state, qualification=current_qualification, sort=current_sort) }}" 
+         class="urgency-chip {% if current_urgency == '48h' %}active{% endif %}">
+        🟠 Closing in 48 Hours
+      </a>
+
+      <a href="{{ url_for('index', urgency='7d', q=current_query, category=current_category, state=current_state, qualification=current_qualification, sort=current_sort) }}" 
+         class="urgency-chip {% if current_urgency == '7d' %}active{% endif %}">
+        🟡 Closing This Week
+      </a>
+
+      <a href="{{ url_for('index', urgency='extended', q=current_query, category=current_category, state=current_state, qualification=current_qualification, sort=current_sort) }}" 
+         class="urgency-chip {% if current_urgency == 'extended' %}active{% endif %}">
+        🟣 Corrigendum / Extended
+      </a>
+    </div>
+
+  </form>
+</section>
+
+<!-- Job Listings Header -->
+<div class="listings-header">
+  <div class="listings-title">
+    <h2>Government Job Vacancies ({{ jobs|length }})</h2>
+    <p>Direct official application links verified with authentic government sources</p>
+  </div>
+</div>
+
+<!-- Jobs Grid -->
+<div class="jobs-grid" id="jobs-container">
+  {% if jobs %}
+    {% for job in jobs %}
+      <article class="job-card" id="job-card-{{ job.id }}">
+        
+        <!-- Card Top Bar: Sector Pill & Urgency Badge -->
+        <div class="job-card-top">
+          <span class="dept-pill">{{ job.category }}</span>
+          <span class="urgency-badge {{ job.urgency_class }}">
+            {% if job.urgency == 'CRITICAL' %}🔥{% elif job.urgency == 'URGENT' %}⚠️{% elif job.urgency == 'OPEN' %}🟢{% endif %}
+            {{ job.urgency_label }}
+          </span>
+        </div>
+
+        <!-- Corrigendum Ribbon if Deadline Extended -->
+        {% if job.is_extended == 1 %}
+          <div class="corrigendum-ribbon" title="{{ job.corrigendum_note }}">
+            <span>🔄</span>
+            <span><strong>Deadline Extended:</strong> {{ job.corrigendum_note }}</span>
+          </div>
+        {% endif %}
+
+        <!-- Job Title -->
+        <a href="{{ url_for('job_detail', job_id=job.id) }}" class="job-title-link">
+          {{ job.title }}
+        </a>
+
+        <!-- Organization & Advt No -->
+        <div class="job-org-meta">
+          <span>🏛️ {{ job.organization }}</span>
+          <span class="advt-tag">Advt: {{ job.advt_no }}</span>
+        </div>
+
+        <!-- Specs Grid -->
+        <div class="job-specs-grid">
+          <div class="spec-item">
+            <span class="spec-title">Vacancies</span>
+            <span class="spec-value">{{ "{:,}".format(job.vacancies) }} Posts</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-title">Min Qualification</span>
+            <span class="spec-value">{{ job.min_qualification }}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-title">Age Limit</span>
+            <span class="spec-value">{{ job.min_age }} - {{ job.max_age }} Yrs</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-title">State / Region</span>
+            <span class="spec-value">{{ job.state }}</span>
+          </div>
+        </div>
+
+        <!-- Real-Time Countdown Box -->
+        <div class="deadline-countdown-box">
+          <div class="deadline-text-group">
+            <span class="deadline-label">Application Closes</span>
+            <span class="deadline-date-val">{{ job.deadline_formatted }}</span>
+          </div>
+          <div class="timer-digits-box {% if job.urgency == 'CRITICAL' %}timer-critical{% else %}timer-normal{% endif %}" 
+               data-deadline="{{ job.deadline }}">
+            {{ job.countdown_text }}
+          </div>
+        </div>
+
+        <!-- Official Link Verification Badge -->
+        <div style="margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+          <span class="verification-seal">
+            <span>🛡️</span> {{ job.verification_info.badge }}
+          </span>
+          <span style="font-size: 0.74rem; color: var(--text-light); font-family: var(--font-mono);">
+            {{ job.source_portal }}
+          </span>
+        </div>
+
+        <!-- Card Actions -->
+        <div class="card-actions-row">
+          <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn-primary-apply" id="btn-details-{{ job.id }}">
+            Details & Apply ↗
+          </a>
+
+          <button 
+            type="button" 
+            class="btn-icon-only" 
+            title="Check Your Eligibility" 
+            data-check-eligibility
+            data-job-id="{{ job.id }}"
+            data-job-title="{{ job.title }}"
+            data-min-age="{{ job.min_age }}"
+            data-max-age="{{ job.max_age }}"
+            data-min-qual="{{ job.min_qualification }}"
+            id="btn-eligibility-{{ job.id }}"
+          >
+            🎯
+          </button>
+
+          <button 
+            type="button" 
+            class="btn-icon-only" 
+            title="Set Deadline Email Reminder" 
+            data-open-reminder
+            data-job-id="{{ job.id }}"
+            data-job-title="{{ job.title }}"
+            data-job-deadline="{{ job.deadline }}"
+            id="btn-reminder-{{ job.id }}"
+          >
+            🔔
+          </button>
+
+          <a 
+            href="{{ url_for('download_calendar', job_id=job.id) }}" 
+            class="btn-icon-only" 
+            title="Download Calendar Reminder (.ics)"
+            id="btn-calendar-{{ job.id }}"
+          >
+            📅
+          </a>
+        </div>
+
+      </article>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state-box">
+      <div class="empty-icon">🔍</div>
+      <h3>No matching vacancies found</h3>
+      <p style="color: var(--text-muted); margin-top: 6px;">Try clearing search keywords or choosing "All Active Postings" above.</p>
+      <div style="margin-top: 18px;">
+        <a href="{{ url_for('index') }}" class="btn-filter-action">Reset All Filters</a>
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Government Job Eligibility Checker | Age & Qualification Matching{% endblock %}
+
+{% block content %}
+
+<!-- Hero Header -->
+<div class="hero-section" style="padding: 28px 32px; margin-bottom: 24px;">
+  <div class="hero-content">
+    <div class="hero-tagline">
+      <span>🎯 Automated Profiler & Relaxation Engine</span>
+    </div>
+    <h2 class="hero-title" style="font-size: 2rem;">
+      Find Government Jobs You Are Eligible To Apply For
+    </h2>
+    <p class="hero-desc" style="margin-bottom: 0;">
+      Input your date of birth, category, and educational qualifications. Our rule engine calculates your exact age as of official reference dates and applies standard reservation relaxations (+3 yrs OBC, +5 yrs SC/ST, +10 yrs PwD) across all active vacancies.
+    </p>
+  </div>
+</div>
+
+<!-- Candidate Profiler Form Card -->
+<div class="search-filter-card" style="margin-bottom: 24px;">
+  <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+    <span>👤</span> Your Candidate Profile & Criteria
+  </h3>
+
+  <form id="full-eligibility-form">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px;">
+      
+      <!-- Date of Birth -->
+      <div>
+        <label for="cand-dob" style="display: block; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">
+          Date of Birth (DOB)
+        </label>
+        <input type="date" id="cand-dob" name="dob" value="1998-05-15" class="search-input" style="padding-left: 14px;" required>
+        <div style="font-size: 0.78rem; margin-top: 4px; color: var(--text-muted);">
+          Calculated Age: <strong id="live-age-display" style="color: var(--primary);">28 Years, 5 Months</strong>
+        </div>
+      </div>
+
+      <!-- Category -->
+      <div>
+        <label for="cand-category" style="display: block; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">
+          Social Category / Quota
+        </label>
+        <select id="cand-category" name="category" class="filter-select">
+          <option value="General">General / UR (Standard Limits)</option>
+          <option value="OBC" selected>OBC Non-Creamy Layer (+3 Yrs)</option>
+          <option value="SC">SC - Scheduled Caste (+5 Yrs)</option>
+          <option value="ST">ST - Scheduled Tribe (+5 Yrs)</option>
+          <option value="EWS">EWS - Economically Weaker Section</option>
+          <option value="PwD">PwD - Benchmark Disability (+10 Yrs)</option>
+          <option value="Ex-Servicemen">Ex-Servicemen (ESM)</option>
+        </select>
+        <div style="font-size: 0.76rem; margin-top: 4px; color: var(--text-muted);">
+          Age relaxation will be automatically calculated.
+        </div>
+      </div>
+
+      <!-- Qualification -->
+      <div>
+        <label for="cand-qualification" style="display: block; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">
+          Highest Educational Level
+        </label>
+        <select id="cand-qualification" name="qualification" class="filter-select">
+          <option value="Graduate" selected>Graduate (Bachelor's Degree)</option>
+          <option value="10th Pass">10th Pass / Matriculation</option>
+          <option value="12th Pass">12th Pass / Higher Secondary</option>
+          <option value="Diploma">Polytechnic Diploma</option>
+          <option value="B.Tech/BE">B.Tech / B.E. (Engineering)</option>
+          <option value="Post Graduate">Post Graduate (Masters Degree)</option>
+          <option value="MBBS">MBBS / Medical Degree</option>
+          <option value="LLB">LLB / Law Degree</option>
+        </select>
+      </div>
+
+      <!-- Stream -->
+      <div>
+        <label for="cand-stream" style="display: block; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">
+          Discipline / Specialization
+        </label>
+        <select id="cand-stream" name="stream" class="filter-select">
+          <option value="Any" selected>Any / General Stream</option>
+          <option value="Engineering">Engineering (CS, Mech, Civil, ECE)</option>
+          <option value="Science">Pure Science / Math / Physics</option>
+          <option value="Commerce">Commerce / Banking / Finance</option>
+          <option value="Medical">Medical / Nursing</option>
+          <option value="Law">Law & Judiciary</option>
+        </select>
+      </div>
+
+    </div>
+
+    <div style="display: flex; justify-content: flex-end; gap: 12px;">
+      <button type="submit" class="btn-filter-action" id="btn-run-full-scan">
+        🔍 Evaluate All Government Vacancies
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Dynamic Summary Stats Box -->
+<div id="eligibility-summary-stats" style="margin-bottom: 24px;"></div>
+
+<!-- Filter Tabs: All, Eligible, Relaxed, Ineligible -->
+<div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+  <button type="button" class="urgency-chip active" data-eligibility-tab="all" id="tab-all">
+    All Evaluated Positions
+  </button>
+  <button type="button" class="urgency-chip" data-eligibility-tab="eligible" id="tab-eligible" style="border-color: var(--open);">
+    ⭐ Fully Eligible Only
+  </button>
+  <button type="button" class="urgency-chip" data-eligibility-tab="relaxed" id="tab-relaxed" style="border-color: var(--extended);">
+    🛡️ Eligible via Category Relaxation
+  </button>
+  <button type="button" class="urgency-chip" data-eligibility-tab="ineligible" id="tab-ineligible" style="border-color: var(--critical);">
+    ⚠️ Ineligible (Over/Under Age or Qual Mismatch)
+  </button>
+</div>
+
+<!-- Dynamic Results Grid -->
+<div class="jobs-grid" id="eligibility-results-grid">
+  <!-- Rendered dynamically by static/js/eligibility.js -->
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/eligibility.js') }}"></script>
+{% endblock %}

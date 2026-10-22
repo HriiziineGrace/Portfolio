@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Government Job Deadline Tracker | Application Closing Timeline{% endblock %}
+
+{% block content %}
+
+<!-- Header Banner -->
+<div class="hero-section" style="padding: 28px 32px; margin-bottom: 24px;">
+  <div class="hero-content">
+    <div class="hero-tagline">
+      <span>⏳ Chronological Closing Schedule</span>
+    </div>
+    <h2 class="hero-title" style="font-size: 2rem;">
+      Application Closing Timeline & Calendar
+    </h2>
+    <p class="hero-desc" style="margin-bottom: 0;">
+      Plan your application submissions, fee payments, and document uploads in advance to avoid portal slowdowns during final deadline hours.
+    </p>
+  </div>
+</div>
+
+<!-- Timeline Bucket 1: Closing in 48 Hours (Critical) -->
+<section style="margin-bottom: 32px;" id="section-48h">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 2px solid var(--critical); padding-bottom: 8px;">
+    <h3 style="font-family: var(--font-display); font-size: 1.35rem; font-weight: 800; color: var(--critical); display: flex; align-items: center; gap: 8px;">
+      <span>🔥</span> Closing in Next 48 Hours ({{ buckets.closing_48h|length }})
+    </h3>
+    <span style="font-size: 0.8rem; background: var(--critical-bg); color: var(--critical); padding: 4px 10px; border-radius: 20px; font-weight: 700;">
+      Immediate Action Required
+    </span>
+  </div>
+
+  <div class="jobs-grid">
+    {% if buckets.closing_48h %}
+      {% for job in buckets.closing_48h %}
+        <div class="job-card" style="border-left: 4px solid var(--critical);">
+          <div class="job-card-top">
+            <span class="dept-pill">{{ job.category }}</span>
+            <span class="urgency-badge urgency-critical">
+              {{ job.urgency_label }}
+            </span>
+          </div>
+
+          <a href="{{ url_for('job_detail', job_id=job.id) }}" class="job-title-link">{{ job.title }}</a>
+          <div class="job-org-meta">
+            <span>{{ job.organization }}</span>
+            <span class="advt-tag">{{ job.advt_no }}</span>
+          </div>
+
+          <div class="deadline-countdown-box">
+            <div class="deadline-text-group">
+              <span class="deadline-label">Deadline Time</span>
+              <span class="deadline-date-val" style="color: var(--critical);">{{ job.deadline_formatted }}</span>
+            </div>
+            <div class="timer-digits-box timer-critical" data-deadline="{{ job.deadline }}">
+              {{ job.countdown_text }}
+            </div>
+          </div>
+
+          <div class="job-specs-grid">
+            <div class="spec-item">
+              <span class="spec-title">Vacancies</span>
+              <span class="spec-value">{{ "{:,}".format(job.vacancies) }}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-title">Fee</span>
+              <span class="spec-value">{{ job.application_fee.split('(')[0] }}</span>
+            </div>
+          </div>
+
+          <div class="card-actions-row">
+            <a href="{{ job.official_apply_url }}" target="_blank" rel="noopener noreferrer" class="btn-primary-apply" style="background: var(--critical);">
+              Apply on Portal ↗
+            </a>
+            <a href="{{ url_for('download_calendar', job_id=job.id) }}" class="btn-icon-only" title="Export .ICS Calendar">
+              📅
+            </a>
+            <button class="btn-icon-only" data-open-reminder data-job-id="{{ job.id }}" data-job-title="{{ job.title }}" data-job-deadline="{{ job.deadline }}" title="Set Alert">
+              🔔
+            </button>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div style="background: var(--bg-surface); padding: 20px; border-radius: 8px; color: var(--text-muted); font-size: 0.9rem; grid-column: 1/-1;">
+        No vacancies closing in the next 48 hours.
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- Timeline Bucket 2: Closing This Week (Urgent) -->
+<section style="margin-bottom: 32px;" id="section-this-week">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 2px solid var(--urgent); padding-bottom: 8px;">
+    <h3 style="font-family: var(--font-display); font-size: 1.35rem; font-weight: 800; color: var(--urgent); display: flex; align-items: center; gap: 8px;">
+      <span>⚠️</span> Closing This Week ({{ buckets.this_week|length }})
+    </h3>
+    <span style="font-size: 0.8rem; background: var(--urgent-bg); color: var(--urgent); padding: 4px 10px; border-radius: 20px; font-weight: 700;">
+      3 to 7 Days Remaining
+    </span>
+  </div>
+
+  <div class="jobs-grid">
+    {% if buckets.this_week %}
+      {% for job in buckets.this_week %}
+        <div class="job-card" style="border-left: 4px solid var(--urgent);">
+          <div class="job-card-top">
+            <span class="dept-pill">{{ job.category }}</span>
+            <span class="urgency-badge urgency-urgent">
+              {{ job.urgency_label }}
+            </span>
+          </div>
+
+          <a href="{{ url_for('job_detail', job_id=job.id) }}" class="job-title-link">{{ job.title }}</a>
+          <div class="job-org-meta">
+            <span>{{ job.organization }}</span>
+            <span class="advt-tag">{{ job.advt_no }}</span>
+          </div>
+
+          <div class="deadline-countdown-box">
+            <div class="deadline-text-group">
+              <span class="deadline-label">Deadline Time</span>
+              <span class="deadline-date-val">{{ job.deadline_formatted }}</span>
+            </div>
+            <div class="timer-digits-box timer-normal" data-deadline="{{ job.deadline }}">
+              {{ job.countdown_text }}
+            </div>
+          </div>
+
+          <div class="job-specs-grid">
+            <div class="spec-item">
+              <span class="spec-title">Vacancies</span>
+              <span class="spec-value">{{ "{:,}".format(job.vacancies) }}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-title">Min Qual</span>
+              <span class="spec-value">{{ job.min_qualification }}</span>
+            </div>
+          </div>
+
+          <div class="card-actions-row">
+            <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn-primary-apply">
+              View & Apply ↗
+            </a>
+            <a href="{{ url_for('download_calendar', job_id=job.id) }}" class="btn-icon-only" title="Export .ICS">
+              📅
+            </a>
+            <button class="btn-icon-only" data-open-reminder data-job-id="{{ job.id }}" data-job-title="{{ job.title }}" data-job-deadline="{{ job.deadline }}" title="Set Alert">
+              🔔
+            </button>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div style="background: var(--bg-surface); padding: 20px; border-radius: 8px; color: var(--text-muted); font-size: 0.9rem; grid-column: 1/-1;">
+        No vacancies closing this week.
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- Timeline Bucket 3: Closing Next Week & Later -->
+<section style="margin-bottom: 32px;" id="section-next-week">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 2px solid var(--primary); padding-bottom: 8px;">
+    <h3 style="font-family: var(--font-display); font-size: 1.35rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 8px;">
+      <span>📅</span> Upcoming Deadlines ({{ buckets.next_week|length + buckets.later|length }})
+    </h3>
+    <span style="font-size: 0.8rem; background: var(--primary-light); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-weight: 700;">
+      8+ Days Remaining
+    </span>
+  </div>
+
+  <div class="jobs-grid">
+    {% for job in buckets.next_week + buckets.later %}
+      <div class="job-card" style="border-left: 4px solid var(--open);">
+        <div class="job-card-top">
+          <span class="dept-pill">{{ job.category }}</span>
+          <span class="urgency-badge {{ job.urgency_class }}">
+            {{ job.urgency_label }}
+          </span>
+        </div>
+
+        <a href="{{ url_for('job_detail', job_id=job.id) }}" class="job-title-link">{{ job.title }}</a>
+        <div class="job-org-meta">
+          <span>{{ job.organization }}</span>
+          <span class="advt-tag">{{ job.advt_no }}</span>
+        </div>
+
+        <div class="deadline-countdown-box">
+          <div class="deadline-text-group">
+            <span class="deadline-label">Deadline Time</span>
+            <span class="deadline-date-val">{{ job.deadline_formatted }}</span>
+          </div>
+          <div class="timer-digits-box timer-normal" data-deadline="{{ job.deadline }}">
+            {{ job.countdown_text }}
+          </div>
+        </div>
+
+        <div class="card-actions-row">
+          <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn-primary-apply">
+            View Details ↗
+          </a>
+          <a href="{{ url_for('download_calendar', job_id=job.id) }}" class="btn-icon-only" title="Export .ICS Calendar">
+            📅
+          </a>
+          <button class="btn-icon-only" data-open-reminder data-job-id="{{ job.id }}" data-job-title="{{ job.title }}" data-job-deadline="{{ job.deadline }}" title="Set Alert">
+            🔔
+          </button>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+{% endblock %}

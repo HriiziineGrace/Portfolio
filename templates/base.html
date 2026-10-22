@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Government Job Deadline Guardian{% endblock %}</title>
+  <meta name="description" content="Centralized platform tracking official government job vacancies, application deadlines, eligibility criteria, and corrigendum notifications.">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20%22100%22%20%22100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+</head>
+<body>
+
+  <!-- Top Official Header -->
+  <header class="gov-top-bar">
+    <div class="gov-top-container">
+      <div class="gov-emblem-badge">
+        <span>🇮🇳</span>
+        <strong>GOVERNMENT JOB DEADLINE GUARDIAN</strong>
+        <span style="opacity: 0.6; margin: 0 4px;">|</span>
+        <span>National Official Vacancy & Application Deadline Monitoring System</span>
+      </div>
+      <div class="top-actions">
+        <span>Reference Time: <strong>{{ current_time_str }}</strong></span>
+        <span style="opacity: 0.6;">•</span>
+        <a href="{{ url_for('duplicates_page') }}" style="color: #60a5fa; font-weight: 600;">🔍 Duplicate Audit</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sticky Navbar -->
+  <nav class="navbar" id="main-nav">
+    <div class="nav-container">
+      <a href="{{ url_for('index') }}" class="brand-link" id="brand-logo-link">
+        <div class="brand-icon">
+          <span>🛡️</span>
+        </div>
+        <div class="brand-text">
+          <h1>Deadline Guardian</h1>
+          <span>Official Govt Vacancies</span>
+        </div>
+      </a>
+
+      <ul class="nav-links">
+        <li class="nav-item">
+          <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}" id="nav-home">
+            <span>🏠</span> All Vacancies
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url_for('eligibility_page') }}" class="{% if request.endpoint == 'eligibility_page' %}active{% endif %}" id="nav-eligibility">
+            <span>🎯</span> Eligibility Checker
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url_for('deadline_tracker_page') }}" class="{% if request.endpoint == 'deadline_tracker_page' %}active{% endif %}" id="nav-deadlines">
+            <span>⏳</span> Deadline Tracker
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url_for('duplicates_page') }}" class="{% if request.endpoint == 'duplicates_page' %}active{% endif %}" id="nav-duplicates">
+            <span>🔄</span> Duplicate Detection
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url_for('admin_page') }}" class="{% if request.endpoint == 'admin_page' %}active{% endif %}" id="nav-admin">
+            <span>⚙️</span> Portal Sync
+          </a>
+        </li>
+      </ul>
+
+      <div class="nav-controls">
+        <button type="button" class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle Dark/Light Mode" aria-label="Toggle theme">
+          🌙
+        </button>
+        <a href="{{ url_for('admin_page') }}" class="btn-primary-apply" style="padding: 7px 14px; font-size: 0.84rem;" id="nav-sync-btn">
+          ⚡ Sync Feeds
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Urgent Deadline Live Marquee -->
+  <div class="urgent-ticker-bar" id="urgent-ticker">
+    <div class="ticker-label">⚠️ CLOSING SOON</div>
+    <div class="ticker-content">
+      <span class="ticker-item">
+        <strong>UPSC Civil Services 2026</strong>: Closes 21-Oct (18:00 hrs) — Apply Now!
+      </span>
+      <span class="ticker-item">
+        <strong>SSC CGL 2026</strong>: 14,800 Vacancies closing in 48 hours (22-Oct)!
+      </span>
+      <span class="ticker-item">
+        <strong>RRB Assistant Loco Pilot</strong>: 18,799 posts closing 24-Oct!
+      </span>
+      <span class="ticker-item">
+        <strong>UPPSC PCS 2026</strong>: Deadline Extended to 25-Oct via Corrigendum Notice!
+      </span>
+      <span class="ticker-item">
+        <strong>SBI PO 2026-27</strong>: Closing 26-Oct 23:59 hrs. Avoid server load!
+      </span>
+    </div>
+  </div>
+
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div style="max-width: 1320px; margin: 16px auto 0; padding: 0 20px;">
+        {% for category, message in messages %}
+          <div style="padding: 12px 18px; border-radius: 8px; margin-bottom: 10px; font-weight: 600; font-size: 0.9rem;
+                      background: {% if category == 'error' %}var(--critical-bg){% else %}var(--open-bg){% endif %};
+                      color: {% if category == 'error' %}var(--critical){% else %}var(--open){% endif %};
+                      border: 1px solid {% if category == 'error' %}var(--critical-border){% else %}var(--open-border){% endif %};">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Main Content Block -->
+  <main class="main-wrapper">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Shared Modal: Deadline Reminder & Email Simulation -->
+  <div class="modal-overlay" id="reminder-modal" role="dialog" aria-modal="true" aria-labelledby="reminder-modal-title">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="reminder-modal-title">🔔 Set Application Deadline Alert</h3>
+        <button type="button" class="modal-close-btn" data-close-modal aria-label="Close modal">&times;</button>
+      </div>
+      <form id="reminder-form">
+        <div class="modal-body">
+          <input type="hidden" id="modal-job-id" name="job_id">
+          
+          <div style="background: var(--bg-primary); padding: 14px; border-radius: 8px; margin-bottom: 18px; border: 1px solid var(--border-color);">
+            <div style="font-size: 0.76rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted);">Target Job Position</div>
+            <div id="modal-job-title-display" style="font-weight: 700; font-size: 1.05rem; margin-top: 2px;"></div>
+            <div style="font-size: 0.84rem; color: var(--critical); font-weight: 600; margin-top: 4px;">
+              Deadline: <span id="modal-job-deadline-display"></span>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 16px;">
+            <label for="reminder-email" style="display: block; font-weight: 600; font-size: 0.88rem; margin-bottom: 6px;">Your Email Address</label>
+            <input type="email" id="reminder-email" required placeholder="applicant@example.com" class="search-input" style="padding-left: 14px;">
+            <small style="color: var(--text-muted); font-size: 0.78rem;">We will send deadline warnings before the official portal closes.</small>
+          </div>
+
+          <div style="margin-bottom: 16px;">
+            <label for="reminder-days" style="display: block; font-weight: 600; font-size: 0.88rem; margin-bottom: 6px;">Alert Timing</label>
+            <select id="reminder-days" class="filter-select">
+              <option value="1">1 Day Before Deadline (Critical Emergency)</option>
+              <option value="3" selected>3 Days Before Deadline (Recommended for fee payment)</option>
+              <option value="7">7 Days Before Deadline (Early Warning)</option>
+            </select>
+          </div>
+
+          <!-- Instant Simulation Section -->
+          <div style="margin-top: 20px; border-top: 1px dashed var(--border-color); padding-top: 16px;">
+            <button type="button" class="btn-secondary-action" id="btn-send-instant-alert" style="width: 100%; justify-content: center; font-weight: 700; color: var(--primary); border-color: var(--primary);">
+              ⚡ Test Instant Email Alert Preview
+            </button>
+            <div id="email-preview-container" style="display: none;"></div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-reset" data-close-modal>Cancel</button>
+          <button type="submit" class="btn-filter-action" id="btn-save-reminder">
+            Save Reminder Alert
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Shared Modal: Quick Eligibility Checker -->
+  <div class="modal-overlay" id="eligibility-quick-modal" role="dialog" aria-modal="true" aria-labelledby="quick-modal-title">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="quick-modal-title">🎯 Quick Eligibility Checker</h3>
+        <button type="button" class="modal-close-btn" data-close-modal aria-label="Close modal">&times;</button>
+      </div>
+      <form id="quick-eligibility-form">
+        <div class="modal-body">
+          <input type="hidden" id="quick-job-id">
+          
+          <div style="background: var(--bg-primary); padding: 12px; border-radius: 8px; margin-bottom: 16px; border: 1px solid var(--border-color);">
+            <div id="quick-job-title" style="font-weight: 700; font-size: 1rem; color: var(--text-main);"></div>
+            <div id="quick-job-reqs" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;"></div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+            <div>
+              <label for="quick-dob" style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Date of Birth</label>
+              <input type="date" id="quick-dob" required value="1998-05-15" class="search-input" style="padding-left: 12px;">
+            </div>
+            <div>
+              <label for="quick-category" style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Category / Reservation</label>
+              <select id="quick-category" class="filter-select">
+                <option value="General">General / UR</option>
+                <option value="OBC">OBC (+3 Years Relaxation)</option>
+                <option value="SC">SC (+5 Years Relaxation)</option>
+                <option value="ST">ST (+5 Years Relaxation)</option>
+                <option value="EWS">EWS</option>
+                <option value="PwD">PwD (+10 Years Relaxation)</option>
+                <option value="Ex-Servicemen">Ex-Servicemen</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+            <div>
+              <label for="quick-qualification" style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Highest Qualification</label>
+              <select id="quick-qualification" class="filter-select">
+                <option value="Graduate">Graduate (Any Degree)</option>
+                <option value="10th Pass">10th Pass (Matric)</option>
+                <option value="12th Pass">12th Pass (Higher Sec)</option>
+                <option value="Diploma">Diploma in Engineering</option>
+                <option value="B.Tech/BE">B.Tech / B.E.</option>
+                <option value="MBBS">MBBS / Medical Degree</option>
+                <option value="LLB">LLB / Law Degree</option>
+                <option value="Post Graduate">Post Graduate (Masters)</option>
+              </select>
+            </div>
+            <div>
+              <label for="quick-stream" style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Discipline / Stream</label>
+              <select id="quick-stream" class="filter-select">
+                <option value="Any">General / Any Stream</option>
+                <option value="Engineering">Engineering & Technology</option>
+                <option value="Science">Pure Science</option>
+                <option value="Commerce">Commerce & Accounting</option>
+                <option value="Medical">Medical / Healthcare</option>
+                <option value="Law">Law & Judiciary</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="quick-eligibility-result" style="display: none;"></div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-reset" data-close-modal>Close</button>
+          <button type="submit" class="btn-filter-action" id="btn-check-calc">
+            Calculate Eligibility ⚡
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Footer -->
+  <footer class="footer-main">
+    <div class="footer-container">
+      <div class="footer-col">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
+          <span style="font-size: 1.8rem;">🛡️</span>
+          <h4 style="font-size: 1.25rem; margin-bottom: 0;">Government Job Deadline Guardian</h4>
+        </div>
+        <p style="font-size: 0.86rem; color: #94a3b8; line-height: 1.6; max-width: 440px;">
+          A dedicated civic utility empowering aspirants with verified official government recruitment notices, real-time closing countdowns, corrigendum alerts, and automated eligibility evaluation.
+        </p>
+        <div style="margin-top: 16px; display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.06); padding: 6px 12px; border-radius: 20px; font-size: 0.78rem;">
+          <span style="color: #10b981;">●</span> Verified Against Official .GOV.IN / .NIC.IN Portals
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h4>Key Tools</h4>
+        <ul class="footer-links">
+          <li><a href="{{ url_for('index') }}">All Notifications</a></li>
+          <li><a href="{{ url_for('eligibility_page') }}">Eligibility Calculator</a></li>
+          <li><a href="{{ url_for('deadline_tracker_page') }}">Deadline Calendar</a></li>
+          <li><a href="{{ url_for('duplicates_page') }}">Duplicate Detection Audit</a></li>
+          <li><a href="{{ url_for('admin_page') }}">Portal Feed Synchronizer</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Official Portals</h4>
+        <ul class="footer-links">
+          <li><a href="https://upsc.gov.in" target="_blank" rel="noopener">UPSC (upsc.gov.in) ↗</a></li>
+          <li><a href="https://ssc.gov.in" target="_blank" rel="noopener">SSC (ssc.gov.in) ↗</a></li>
+          <li><a href="https://rrbapply.gov.in" target="_blank" rel="noopener">Railways (rrbapply.gov.in) ↗</a></li>
+          <li><a href="https://ibps.in" target="_blank" rel="noopener">Banking (ibps.in) ↗</a></li>
+          <li><a href="https://joinindianarmy.nic.in" target="_blank" rel="noopener">Indian Army (nic.in) ↗</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Security & Trust</h4>
+        <p style="font-size: 0.82rem; line-height: 1.5; color: #94a3b8;">
+          All notification links point directly to authenticated government servers. Third-party or sponsored job agency ads are strictly prevented.
+        </p>
+        <div style="margin-top: 12px; font-size: 0.8rem; color: #38bdf8;">
+          🛡️ SHA-256 Duplicate Protection Active
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div>
+        © {{ current_year }} Government Job Deadline Guardian. Open Public Service Initiative.
+      </div>
+      <div>
+        System Date Reference: 20-Oct-2026 • Made with Python, Flask & SQLite
+      </div>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Duplicate Detection & Corrigendum Audit | Deadline Guardian{% endblock %}
+
+{% block content %}
+
+<!-- Hero Header -->
+<div class="hero-section" style="padding: 28px 32px; margin-bottom: 24px;">
+  <div class="hero-content">
+    <div class="hero-tagline">
+      <span>🔄 Intelligent Deduplication & Corrigendum Engine</span>
+    </div>
+    <h2 class="hero-title" style="font-size: 2rem;">
+      Duplicate Detection & Corrigendum Audit
+    </h2>
+    <p class="hero-desc" style="margin-bottom: 0;">
+      Official government vacancy portals often issue duplicate postings, re-advertisements, or corrigendum notices that extend application deadlines. Our SHA-256 fingerprinting and token-matching engine prevents spam while keeping deadline extensions up to date.
+    </p>
+  </div>
+</div>
+
+<!-- Interactive Duplicate Verifier Tool -->
+<div class="search-filter-card" style="margin-bottom: 28px;">
+  <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+    <span>🔍</span> Test a Notification for Duplication
+  </h3>
+  <p style="font-size: 0.86rem; color: var(--text-muted); margin-bottom: 16px;">
+    Paste any vacancy details below to check if it already exists in the system or if it represents an authentic new announcement.
+  </p>
+
+  <form id="duplicate-test-form">
+    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+      <div>
+        <label for="dup-title" style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Job Title</label>
+        <input type="text" id="dup-title" required placeholder="e.g. Civil Services Examination (IAS / IFS) 2026" class="search-input" style="padding-left: 12px;">
+      </div>
+      <div>
+        <label for="dup-org" style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Organization</label>
+        <input type="text" id="dup-org" required placeholder="e.g. Union Public Service Commission (UPSC)" class="search-input" style="padding-left: 12px;">
+      </div>
+      <div>
+        <label for="dup-advt" style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Advt / Notice No.</label>
+        <input type="text" id="dup-advt" required placeholder="e.g. 04/2026-CSP" class="search-input" style="padding-left: 12px;">
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+      <button type="button" class="btn-reset" id="btn-fill-sample-dup" style="font-size: 0.82rem;">
+        Fill Sample Duplicate (UPSC IAS)
+      </button>
+      <button type="submit" class="btn-filter-action" id="btn-run-dup-check">
+        Run Duplicate Engine ⚡
+      </button>
+    </div>
+  </form>
+
+  <div id="dup-check-result" style="display: none; margin-top: 18px;"></div>
+</div>
+
+<!-- Active Corrigendums (Extended Deadlines) -->
+<div class="search-filter-card" style="margin-bottom: 28px; border-left: 4px solid var(--extended);">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+    <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: var(--extended); display: flex; align-items: center; gap: 8px;">
+      <span>📌</span> Officially Extended Vacancies (Corrigendum Updates)
+    </h3>
+    <span style="font-size: 0.8rem; background: var(--extended-bg); color: var(--extended); padding: 4px 10px; border-radius: 20px; font-weight: 700;">
+      {{ extended_jobs|length }} Extended
+    </span>
+  </div>
+
+  {% if extended_jobs %}
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      {% for job in extended_jobs %}
+        <div style="background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+          <div>
+            <a href="{{ url_for('job_detail', job_id=job.id) }}" style="font-weight: 700; font-size: 1.05rem; color: var(--text-main);">
+              {{ job.title }}
+            </a>
+            <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">
+              {{ job.organization }} • Advt: {{ job.advt_no }}
+            </div>
+            <div style="font-size: 0.82rem; color: var(--extended); font-weight: 600; margin-top: 6px;">
+              🔄 {{ job.corrigendum_note }}
+            </div>
+          </div>
+
+          <div style="text-align: right;">
+            <div style="font-size: 0.76rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">New Extended Deadline</div>
+            <div style="font-size: 1.05rem; font-weight: 800; color: var(--primary);">
+              {{ job.deadline_formatted }}
+            </div>
+            <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn-primary-apply" style="padding: 6px 12px; font-size: 0.8rem; margin-top: 6px;">
+              View Notice ↗
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p style="color: var(--text-muted); font-size: 0.88rem;">No extended corrigendums currently active.</p>
+  {% endif %}
+</div>
+
+<!-- Duplicate Detection Audit Log Table -->
+<div class="search-filter-card">
+  <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+    <span>📋</span> Duplicate & Corrigendum Audit Log
+  </h3>
+  <p style="font-size: 0.86rem; color: var(--text-muted); margin-bottom: 16px;">
+    Historical log of incoming recruitment feed items checked against the database.
+  </p>
+
+  <div style="overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.86rem; text-align: left;">
+      <thead>
+        <tr style="background: var(--bg-primary); border-bottom: 2px solid var(--border-color);">
+          <th style="padding: 10px 12px; font-weight: 700;">ID</th>
+          <th style="padding: 10px 12px; font-weight: 700;">Notification Title</th>
+          <th style="padding: 10px 12px; font-weight: 700;">Organization</th>
+          <th style="padding: 10px 12px; font-weight: 700;">Advt No</th>
+          <th style="padding: 10px 12px; font-weight: 700;">Engine Decision</th>
+          <th style="padding: 10px 12px; font-weight: 700;">Match Reason</th>
+          <th style="padding: 10px 12px; font-weight: 700;">Timestamp</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+          <tr style="border-bottom: 1px solid var(--border-color);">
+            <td style="padding: 10px 12px; font-family: var(--font-mono); color: var(--text-muted);">#{{ log.id }}</td>
+            <td style="padding: 10px 12px; font-weight: 600; color: var(--text-main);">{{ log.incoming_title }}</td>
+            <td style="padding: 10px 12px; color: var(--text-muted);">{{ log.incoming_org }}</td>
+            <td style="padding: 10px 12px; font-family: var(--font-mono); font-size: 0.8rem;">{{ log.incoming_advt }}</td>
+            <td style="padding: 10px 12px;">
+              {% if log.status == 'DUPLICATE_IGNORED' %}
+                <span style="background: var(--critical-bg); color: var(--critical); border: 1px solid var(--critical-border); padding: 3px 8px; border-radius: 4px; font-size: 0.74rem; font-weight: 700;">
+                  ✕ DUPLICATE IGNORED
+                </span>
+              {% elif log.status == 'CORRIGENDUM_UPDATED' %}
+                <span style="background: var(--extended-bg); color: var(--extended); border: 1px solid var(--extended-border); padding: 3px 8px; border-radius: 4px; font-size: 0.74rem; font-weight: 700;">
+                  🔄 CORRIGENDUM UPDATED
+                </span>
+              {% elif log.status == 'NEW_INSERTED' %}
+                <span style="background: var(--open-bg); color: var(--open); border: 1px solid var(--open-border); padding: 3px 8px; border-radius: 4px; font-size: 0.74rem; font-weight: 700;">
+                  ✓ NEW INSERTED
+                </span>
+              {% else %}
+                <span style="background: var(--urgent-bg); color: var(--urgent); padding: 3px 8px; border-radius: 4px; font-size: 0.74rem; font-weight: 700;">
+                  {{ log.status }}
+                </span>
+              {% endif %}
+            </td>
+            <td style="padding: 10px 12px; font-size: 0.8rem; color: var(--text-muted);">{{ log.match_reason }}</td>
+            <td style="padding: 10px 12px; font-size: 0.76rem; font-family: var(--font-mono); color: var(--text-light); white-space: nowrap;">{{ log.detected_at }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Fill sample duplicate button
+  document.getElementById('btn-fill-sample-dup').addEventListener('click', () => {
+    document.getElementById('dup-title').value = 'Civil Services Examination (IAS / IFS) 2026';
+    document.getElementById('dup-org').value = 'Union Public Service Commission (UPSC)';
+    document.getElementById('dup-advt').value = '04/2026-CSP';
+  });
+
+  // Duplicate Check Form Handler
+  document.getElementById('duplicate-test-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const title = document.getElementById('dup-title').value;
+    const organization = document.getElementById('dup-org').value;
+    const advt_no = document.getElementById('dup-advt').value;
+
+    const resArea = document.getElementById('dup-check-result');
+    resArea.style.display = 'block';
+    resArea.innerHTML = '<div style="text-align: center; padding: 12px;">Evaluating hashes...</div>';
+
+    try {
+      const res = await fetch('/api/check-duplicate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, organization, advt_no })
+      });
+      const data = await res.json();
+
+      let isDup = data.duplicate;
+      resArea.innerHTML = `
+        <div style="background: ${isDup ? 'var(--critical-bg)' : 'var(--open-bg)'}; border: 1px solid ${isDup ? 'var(--critical-border)' : 'var(--open-border)'}; border-radius: 8px; padding: 16px;">
+          <div style="font-weight: 800; font-size: 1rem; color: ${isDup ? 'var(--critical)' : 'var(--open)'};">
+            ${isDup ? '⚠️ DUPLICATE NOTIFICATION DETECTED' : '✓ UNIQUE NOTIFICATION VERIFIED'}
+          </div>
+          <p style="font-size: 0.88rem; color: var(--text-main); margin-top: 6px;">
+            ${data.message}
+          </p>
+          <div style="font-size: 0.78rem; font-family: var(--font-mono); color: var(--text-muted); margin-top: 8px;">
+            Match Type: <strong>${data.match_type}</strong>
+          </div>
+        </div>
+      `;
+    } catch(err) {
+      resArea.innerHTML = '<div style="color: red;">Error checking duplicate.</div>';
+    }
+  });
+</script>
+{% endblock %}
