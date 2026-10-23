@@ -48,8 +48,23 @@ def parse_deadline(deadline_str):
 def enrich_job_with_deadline_meta(job_row):
     """Calculate remaining time, urgency category, and deadline formatting."""
     job = dict(job_row)
+    try:
+        job['vacancies'] = int(job.get('vacancies', 1))
+    except (ValueError, TypeError):
+        job['vacancies'] = 1
+
+    try:
+        job['min_age'] = int(job.get('min_age', 18))
+    except (ValueError, TypeError):
+        job['min_age'] = 18
+
+    try:
+        job['max_age'] = int(job.get('max_age', 35))
+    except (ValueError, TypeError):
+        job['max_age'] = 35
+
     now = get_current_system_time()
-    dl_dt = parse_deadline(job['deadline'])
+    dl_dt = parse_deadline(job.get('deadline', ''))
     diff = dl_dt - now
 
     total_seconds = int(diff.total_seconds())

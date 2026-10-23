@@ -24,7 +24,7 @@
           <span class="stat-label">Active Vacancies</span>
           <span class="stat-icon">👥</span>
         </div>
-        <div class="stat-value">{{ "{:,}".format(total_vacancies) }}</div>
+        <div class="stat-value">{{ "{:,}".format(total_vacancies|int) }}</div>
         <div class="stat-meta">Across all Central & State departments</div>
       </div>
 
@@ -208,7 +208,7 @@
         <div class="job-specs-grid">
           <div class="spec-item">
             <span class="spec-title">Vacancies</span>
-            <span class="spec-value">{{ "{:,}".format(job.vacancies) }} Posts</span>
+            <span class="spec-value">{{ "{:,}".format(job.vacancies|int) }} Posts</span>
           </div>
           <div class="spec-item">
             <span class="spec-title">Min Qualification</span>

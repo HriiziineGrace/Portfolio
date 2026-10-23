@@ -120,8 +120,17 @@ def init_db():
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_jobs_qualification ON jobs(min_qualification);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_jobs_hash ON jobs(hash_fingerprint);")
 
+    cursor.execute("SELECT COUNT(*) FROM jobs")
+    job_count = cursor.fetchone()[0]
     conn.commit()
     conn.close()
+
+    if job_count == 0:
+        try:
+            from sample_data import seed_database
+            seed_database(silent=True)
+        except Exception as e:
+            print(f"Auto-seed note: {e}")
 
 if __name__ == "__main__":
     init_db()

@@ -60,11 +60,11 @@
           <div class="job-specs-grid">
             <div class="spec-item">
               <span class="spec-title">Vacancies</span>
-              <span class="spec-value">{{ "{:,}".format(job.vacancies) }}</span>
+              <span class="spec-value">{{ "{:,}".format(job.vacancies|int) }}</span>
             </div>
             <div class="spec-item">
               <span class="spec-title">Fee</span>
-              <span class="spec-value">{{ job.application_fee.split('(')[0] }}</span>
+              <span class="spec-value">{{ (job.application_fee.split('(')[0] if job.application_fee else 'Standard') }}</span>
             </div>
           </div>
 
@@ -130,7 +130,7 @@
           <div class="job-specs-grid">
             <div class="spec-item">
               <span class="spec-title">Vacancies</span>
-              <span class="spec-value">{{ "{:,}".format(job.vacancies) }}</span>
+              <span class="spec-value">{{ "{:,}".format(job.vacancies|int) }}</span>
             </div>
             <div class="spec-item">
               <span class="spec-title">Min Qual</span>
