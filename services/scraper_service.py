@@ -164,7 +164,7 @@ def run_simulated_portal_sync():
     duplicate_count = 0
 
     for batch in SIMULATED_FEED_BATCHES:
-        batch_log = {"batch_name": batch["batch_name"], "items": []}
+        batch_log = {"batch_name": batch["batch_name"], "sync_items": [], "items": []}
         for item in batch["jobs"]:
             total_processed += 1
             res = process_job_notification(item)
@@ -175,13 +175,15 @@ def run_simulated_portal_sync():
             elif res["status"] == "DUPLICATE_IGNORED":
                 duplicate_count += 1
             
-            batch_log["items"].append({
+            entry = {
                 "title": item["title"],
                 "org": item["organization"],
                 "advt": item["advt_no"],
                 "status": res["status"],
                 "message": res["message"]
-            })
+            }
+            batch_log["sync_items"].append(entry)
+            batch_log["items"].append(entry)
         results.append(batch_log)
 
     return {

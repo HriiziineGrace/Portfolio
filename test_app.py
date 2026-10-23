@@ -198,5 +198,89 @@ class TestJobGuardian(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.mimetype, 'text/calendar')
 
+    def test_admin_portal_sync(self):
+        """Verify POST /admin with sync_portals executes and renders template properly."""
+        resp = self.client.post('/admin', data={'sync_portals': '1'}, follow_redirects=True)
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(b"Sync Complete", resp.data)
+        self.assertIn(b"UPSC Official Gazette Feed", resp.data)
+
+    def test_api_add_job_validation_and_duplicate(self):
+        """Verify POST /api/add-job handles validation and duplicate flagging."""
+        # Missing required fields
+        bad_resp = self.client.post('/api/add-job', json={"title": "Missing Org"})
+        self.assertEqual(bad_resp.status_code, 400)
+
+        # Valid addition
+        new_job = {
+            "title": "TEST HAL Management Trainee 2026",
+            "organization": "Hindustan Aeronautics Limited (HAL)",
+            "advt_no": "TEST-HAL-MT-2026",
+            "category": "Engineering/PSU",
+            "state": "Karnataka",
+            "vacancies": 80,
+            "min_age": 21,
+            "max_age": 28,
+            "min_qualification": "B.Tech/BE",
+            "deadline": "2026-11-25 18:00:00"
+        }
+        resp1 = self.client.post('/api/add-job', json=new_job)
+        self.assertEqual(resp1.status_code, 200)
+        data1 = resp1.get_json()
+        self.assertIn(data1["status"], ["NEW_INSERTED", "DUPLICATE_IGNORED"])
+
+        # Second addition should be duplicate
+        resp2 = self.client.post('/api/add-job', json=new_job)
+        self.assertEqual(resp2.status_code, 200)
+        data2 = resp2.get_json()
+        self.assertEqual(data2["status"], "DUPLICATE_IGNORED")
+
+    def test_api_reminder_subscription_and_dispatch(self):
+        """Verify reminder subscription and instant alert preview dispatch."""
+        # Invalid email
+        bad_sub = self.client.post('/api/subscribe-reminder', json={"email": "notanemail", "job_id": 1})
+        self.assertEqual(bad_sub.status_code, 400)
+
+        # Valid subscription
+        good_sub = self.client.post('/api/subscribe-reminder', json={"email": "applicant@test.gov.in", "job_id": 1, "notify_before_days": 3})
+        self.assertEqual(good_sub.status_code, 200)
+        self.assertTrue(good_sub.get_json()["success"])
+
+        # Instant alert preview dispatch
+        alert_resp = self.client.post('/api/send-instant-alert', json={"email": "applicant@test.gov.in", "job_id": 1})
+        self.assertEqual(alert_resp.status_code, 200)
+        alert_data = alert_resp.get_json()
+        self.assertTrue(alert_data["success"])
+        self.assertIn("html_preview", alert_data)
+        self.assertIn("Application Deadline", alert_data["html_preview"])
+
+    def test_job_not_found_handling(self):
+        """Verify requesting non-existent job handles cleanly."""
+        resp = self.client.get('/job/999999', follow_redirects=False)
+        self.assertEqual(resp.status_code, 302)
+
+        cal_resp = self.client.get('/api/calendar/999999.ics')
+        self.assertEqual(cal_resp.status_code, 404)
+
+    def test_index_filters_and_sorting(self):
+        """Verify search filters and sorting options execute without SQL errors."""
+        filters = [
+            '/?q=UPSC',
+            '/?category=Civil+Services',
+            '/?state=All+India',
+            '/?qualification=Graduate',
+            '/?urgency=24h',
+            '/?urgency=48h',
+            '/?urgency=7d',
+            '/?urgency=active',
+            '/?urgency=extended',
+            '/?sort=urgency',
+            '/?sort=newest',
+            '/?sort=vacancies'
+        ]
+        for url in filters:
+            resp = self.client.get(url)
+            self.assertEqual(resp.status_code, 200, f"Filter URL {url} failed with {resp.status_code}")
+
 if __name__ == '__main__':
     unittest.main()
