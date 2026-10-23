@@ -19,7 +19,12 @@ from services.duplicate_service import process_job_notification, audit_check_tex
 from services.reminder_service import generate_ics_calendar, record_and_dispatch_reminder
 from services.scraper_service import verify_official_link, run_simulated_portal_sync
 
-app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, "templates"),
+    static_folder=os.path.join(BASE_DIR, "static")
+)
 app.secret_key = "gov-job-guardian-secret-key-2026"
 
 # Ensure DB is created

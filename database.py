@@ -6,13 +6,29 @@ and reminder subscriptions.
 
 import sqlite3
 import os
+import shutil
 from datetime import datetime
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "job_guardian.db")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ORIGINAL_DB_PATH = os.path.join(BASE_DIR, "job_guardian.db")
+
+def get_db_path():
+    """Resolve database path, handling read-only environments like Vercel."""
+    if os.environ.get("VERCEL"):
+        vercel_db_path = "/tmp/job_guardian.db"
+        if not os.path.exists(vercel_db_path) and os.path.exists(ORIGINAL_DB_PATH):
+            try:
+                shutil.copy2(ORIGINAL_DB_PATH, vercel_db_path)
+            except Exception as e:
+                print(f"Error copying DB to /tmp: {e}")
+        return vercel_db_path
+    return ORIGINAL_DB_PATH
+
+DB_PATH = get_db_path()
 
 def get_db_connection():
     """Get a connection to SQLite database with row factory enabled."""
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(get_db_path())
     conn.row_factory = sqlite3.Row
     return conn
 
